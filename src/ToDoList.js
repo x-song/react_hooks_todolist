@@ -7,9 +7,20 @@ import  {
 } from  './action'
 import './ToDoList.css'
 let idSeq  = Date.now();
-const LS_KEY = '$_key'
+const LS_KEY = '$_key';
+function bindActionCreators(actionCreators,dispatch) {
+    const ret = {};
+    for (let key in actionCreators) {
+        ret[key] = function (...args) {
+            const actionCreator = actionCreators[key];
+            const action = actionCreator(...args);
+            dispatch(action);
+        }
+    }
+    return ret ;
+}
 function Control(props) {
-    const {dispatch} = props ;
+    const {addTodo} = props ;
     const inputRef = useRef();
     const onSubmit = (e)=>{
         e.preventDefault();
@@ -17,12 +28,12 @@ function Control(props) {
         if(newText.length === 0){
             return ;
         }
-        dispatch(createAdd({
+        addTodo({
                 id:++idSeq,
                 text:newText,
                 complete: false
             }
-        ))
+        )
 
         inputRef.current.value = '' ;
     }
@@ -43,14 +54,15 @@ function TodoItem(props) {
             text,
             complete
         },
-        dispatch,
+        removeTodo,
+        toggleToDo
 
     } = props ;
     const onChange = () => {
-        dispatch(createToggle(id))
+        toggleToDo(id)
     }
     const onRemove = () => {
-        dispatch(createRemove(id))
+        removeTodo(id)
     }
 
     return (
@@ -62,7 +74,7 @@ function TodoItem(props) {
     )
 }
  const Todos = memo(function Todos(props) {
-     const {todos,dispatch} =props ;
+     const {removeTodo,toggleToDo,todos} =props ;
      return (
         <ul>
              {
@@ -70,7 +82,8 @@ function TodoItem(props) {
                      return (<TodoItem
                          key={item.id}
                          todo={item}
-                         dispatch={dispatch}
+                         removeTodo={removeTodo}
+                         toggleToDo={toggleToDo}
 
                      />)
                  })
@@ -118,8 +131,22 @@ function ToDoList() {
     },[todos])
   return (
     <div className="todo-list">
-        <Control dispatch={dispatch}/>
-        <Todos dispatch={dispatch}  todos={todos}/>
+        <Control
+            {
+                ...bindActionCreators({
+                    addTodo:createAdd
+                },dispatch)
+            }
+        />
+        <Todos
+            {
+                ...bindActionCreators({
+                    removeTodo:createRemove,
+                    toggleToDo:createToggle
+                },dispatch)
+            }
+
+            todos={todos}/>
     </div>
   );
 }

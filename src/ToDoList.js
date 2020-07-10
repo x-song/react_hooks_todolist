@@ -1,4 +1,10 @@
 import React, { useState,useRef,useCallback,useEffect,memo} from 'react';
+import  {
+    createSet,
+    createAdd,
+    createRemove,
+    createToggle
+} from  './action'
 import './ToDoList.css'
 let idSeq  = Date.now();
 const LS_KEY = '$_key'
@@ -11,14 +17,12 @@ function Control(props) {
         if(newText.length === 0){
             return ;
         }
-        dispatch({
-            type:'add',
-            payload: {
-                        id:++idSeq,
-                            text:newText,
-                        complete: false
-                    }
-        })
+        dispatch(createAdd({
+                id:++idSeq,
+                text:newText,
+                complete: false
+            }
+        ))
 
         inputRef.current.value = '' ;
     }
@@ -43,16 +47,10 @@ function TodoItem(props) {
 
     } = props ;
     const onChange = () => {
-        dispatch({
-            type:'toggle',
-            payload:id
-        })
+        dispatch(createToggle(id))
     }
     const onRemove = () => {
-        dispatch({
-            type:'remove',
-            payload:id
-        })
+        dispatch(createRemove(id))
     }
 
     return (
@@ -113,7 +111,7 @@ function ToDoList() {
     useEffect(()=>{
         const todos = JSON.parse(localStorage.getItem(LS_KEY)|| '[]')
         // setTodos(todos)
-        dispatch({type:"set",payload:todos})
+        dispatch(createSet(todos))
     },[])
     useEffect(()=>{
         localStorage.setItem(LS_KEY,JSON.stringify(todos))
